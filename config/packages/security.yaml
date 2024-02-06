@@ -8,6 +8,20 @@ security:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         main:
+            stateless: true
+            access_token:
+                token_handler:
+                    # Uses the userinfo endpoint of Keycloak to validate the
+                    # JWT token. This is mostly for debugging/local usage.
+                    #oidc_user_info: http://localhost:8080/realms/master/protocol/openid-connect/userinfo
+
+                    # Validates the JWT signature based on the provided JWK
+                    oidc:
+                      algorithm: '%env(OIDC_JWT_ALGORITHM)%'
+                      key: '%env(OIDC_JWK)%'
+                      audience: '%env(OIDC_REALM)%'
+                      issuers: ['%env(OIDC_ISSUER)%']
+
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
 

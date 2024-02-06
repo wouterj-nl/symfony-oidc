@@ -13,5 +13,46 @@ section { background:white;margin:10px;padding:10px;border-radius:5px;box-shadow
 {% block body %}
 <section>
   <h1>Symfony OIDC Demo</h1>
+  <p>First, <a href="{{ path('app_login') }}">login with Keycloak</a>
 </section>
+
+{% if app.request.query.has('token') %}
+<section>
+JWT token from Keycloak:
+<pre><script style="display:block">var token = '{{ app.request.query.get('token') }}'</script>
+<code id="js-jwt"></code></pre>
+</section>
+{% endif %}
+
+<section>
+<code>GET /profile</code>
+<pre><code id="js-profile">Loading...</code></pre>
+</section>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.addEventListener('DOMContentLoaded', async function (){
+  const profileOut = document.querySelector('#js-profile');
+  const jwtOut =  document.querySelector('#js-jwt');
+
+  if (window.token) {
+    const jwt = JSON.parse(atob(window.token.split('.')[1]));
+    jwtOut.innerHTML = JSON.stringify(jwt, null, 2);
+
+    if (jwt.exp < Date.now() / 1000) {
+      profileOut.innerHTML = 'JWT expired, re-login with Keycloak (this demo doesn\'t include a refresh feature)';
+      profileOut.style.border = '2px solid #c33';
+    }
+
+    const response = await fetch('{{ app.request.schemeAndHttpHost }}/profile', {
+      headers: { 'Authorization': 'Bearer ' + window.token }
+    });
+    const profile = await response.json();
+    profileOut.innerHTML = JSON.stringify(profile, null, 2);
+  } else {
+    profileOut.innerHTML = 'No token yet, login with Keycloak';
+  }
+});
+</script>
 {% endblock %}
